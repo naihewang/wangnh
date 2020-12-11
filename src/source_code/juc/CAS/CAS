@@ -1,0 +1,79 @@
+主要内容：
+1.从网站计数器实现中一步步引出CAS操作
+2.介绍JAVA中的CAS及CAS可能存在的问题
+-------------------------------------------------------------------------------------------------
+第一节课：从网站计数器实现中一步步引出CAS操作
+
+需求：我们开发一个网站，需要对访问量进行统计，用户每发送一次请求，访问量+1，如何实现？
+     我们模拟有100个人同时访问，并且每个人对咱们的网站发起10次请求，最后总访问次数应该是1000次。
+
+完结。
+
+
+-------------------------------------------------------------------------------------------------
+第二节课：JDK CAS支持
+CAS 全称“CompareAndSwap”，中文翻译过来为“比较并替换”
+
+定义：
+    CAS操作包含三个操作数————内存位置（V）、期望值（A）和新值（B）。
+如果内存位置的值与期望值匹配，那么处理器会自动将该位置值更新为新值。否则，
+处理器不作任何操作。无论哪种情况，它都会在CAS指令之前返回该位置的值。
+（CAS在一些特殊情况下仅返回CAS是否成功，而不提取当前值）CAS有效的说明了
+“我认为位置V应该包含值A；如果包含该值，则将B放到这个位置；否则，不要更改
+该位置的值，只告诉我这个位置现在的值即可。”
+
+
+Q：怎么使用JDK提供的CAS支持？
+A：java中提供了对CAS操作的支持，具体在sun.misc.unsafe类中，声明如下：
+    public final native boolean compareAndSwapObject(Object var1, long var2, Object var4, Object var5);
+    public final native boolean compareAndSwapInt(Object var1, long var2, int var4, int var5);
+    public final native boolean compareAndSwapLong(Object var1, long var2, long var4, long var6);
+
+    参数var1：表示要操作的对象
+    参数var2：表示要操作对象中属性地址的偏移量
+    参数var4：表示需要修改数据的期望的值
+    参数var5：表示需要修改为的新值
+
+
+
+
+
+
+Q：CAS实现原理是什么？
+A：CAS通过调用JNI的代码实现，JNI：java Native Interface，允许java调用
+其它语言。而compareAndSwapxxx系列的方法就是借助“C语言”来调用cpu底层指
+令实现的。
+以常用的Intel x86平台来说，最终映射到的cpu的指令为“cmpxchg”，这是一个原子指令，
+cpu执行此命令时，实现比较并替换的操作！
+
+
+
+
+
+
+
+Q：现代计算机动不动就上百核心，cmpxchg怎么保证多核心下的线程安全？
+A：系统底层进行CAS操作的时候，会判断当前系统是否为多核心系统，如果是
+就给“总线”加锁，只有一个线程会对总线加锁成功，加锁成功之后会执行CAS操作，
+也就是说CAS的原子性是平台级别的！
+
+
+CAS这么牛逼，有没有什么问题呢？
+
+Q：什么是ABA问题？
+A：CAS需要在操作值的时候检查下值有没有发生变化，如果没有发生变化则更新，
+但是如果一个值原来是A，在CAS方法执行之前，被其它线程修改为了B、然后又修改
+回了A，那么CAS方法执行检查的时候会发现它的值没有发生变化，但是实际却变化了。
+这就是CAS的ABA问题。
+
+提示：使用程序模拟ABA现场。
+
+Q：如何解决ABA问题？
+A：解决ABA最简单的方案就是给值加一个修改版本号，每次值变化，都会修改它的版本号，
+CAS操作时都去对比此版本号。
+
+java中ABA解决方法（AtomicStampedReference）
+AtomicStampedReference主要包含一个对象引用及一个可以自动更新的整数“stamp”的pair
+对象来解决ABA问题。
+
+提示：使用AtomicStampedReference修改ABA BUG。
