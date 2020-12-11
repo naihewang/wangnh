@@ -1,4 +1,4 @@
-package source_code.juc.CAS;
+package source_code.juc.cas;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -16,9 +16,9 @@ import java.util.concurrent.TimeUnit;
  * 小刘讲师立刻返还所有课程费用，一分钱不收！
  * @since 1.0.0
  */
-public class Demo02 {
+public class Demo03 {
     //总访问量
-    static int count = 0;
+    volatile static int count = 0;
 
 
     /**
@@ -39,7 +39,7 @@ public class Demo02 {
      *
      */
     //模拟访问的方法
-    public synchronized static void request() throws InterruptedException {
+    public static void request() throws InterruptedException {
         //模拟耗时5毫秒
         TimeUnit.MILLISECONDS.sleep(5);
         /**
@@ -60,8 +60,27 @@ public class Demo02 {
          * A：java中synchronized关键字和ReentrantLock都可以实现对资源枷锁，保证并发正确性，
          * 多线程的情况下可以保证被锁住的资源被“串行”访问。
          */
-        count ++;
+//        count ++;
+
+        int expectCount; //表示期望值
+        while(!compareAndSwap((expectCount = getCount()), expectCount + 1)) {}
     }
+
+    /**
+     * @param expectCount 期望值count
+     * @param newCount 需要给count赋值的新值
+     * @return 成功返回 true 失败返回false
+     */
+    public static synchronized boolean compareAndSwap(int expectCount, int newCount) {
+        //判断count当前值是否和期望值expectCount一致，如果一致 将newCount赋值给count
+        if(getCount() == expectCount) {
+            count = newCount;
+            return true;
+        }
+        return false;
+    }
+
+    public static int getCount() {return count;}
 
     public static void main(String[] args) throws InterruptedException {
         //开始时间

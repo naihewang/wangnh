@@ -1,4 +1,4 @@
-package source_code.juc.CAS;
+package source_code.juc.cas;
 
 public class Main {
 

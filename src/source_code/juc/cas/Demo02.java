@@ -1,4 +1,4 @@
-package source_code.juc.CAS;
+package source_code.juc.cas;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -16,12 +16,30 @@ import java.util.concurrent.TimeUnit;
  * 小刘讲师立刻返还所有课程费用，一分钱不收！
  * @since 1.0.0
  */
-public class Demo {
+public class Demo02 {
     //总访问量
     static int count = 0;
 
+
+    /**
+     * Q：耗时太长的原因是什么呢？
+     * A：程序中的request方法使用synchronized关键字修饰，保证了并发情况下，request方法同一时刻
+     * 只允许一个线程进入，request加锁相当于串行执行了，count的结果和我们预期的一致，知识耗时太长了..
+     *
+     * Q：如何解决耗时长的问题？
+     * A：count ++ 操作实际上是由3步来完成！（jvm执行引擎）
+     *    1.获取count的值，记做A : A=count
+     *    2.将A值+1，得到B ：B=A+1
+     *    3.将B值赋值给count
+     *    升级第3步的实现：
+     *       1.获取锁
+     *       2.获取以下count最新的值，记做LV
+     *       3.判断LV是否等于A，如果相等，则将B的值赋值给count，并返回true，否则返回false
+     *       4.释放锁
+     *
+     */
     //模拟访问的方法
-    public static void request() throws InterruptedException {
+    public synchronized static void request() throws InterruptedException {
         //模拟耗时5毫秒
         TimeUnit.MILLISECONDS.sleep(5);
         /**
