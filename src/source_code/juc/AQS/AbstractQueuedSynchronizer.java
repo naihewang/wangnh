@@ -1771,7 +1771,7 @@ public abstract class AbstractQueuedSynchronizer
         //条件一：node.waitStatus == Node.CONDITION 条件成立，说明当前node一定是在
         //条件队列，因为signal方法迁移节点到 阻塞队列前，会将node的状态设置为 0
         //条件二：前置条件：node.waitStatus != Node.CONDITION   ===>
-        // 1.node.waitStatus == 0 (表示当前节点已经被signal了)
+        // 1.node.waitStatus == 0 (表示当前节点已经被signal了),在过程中还没迁移到阻塞队列
         // 2.node.waitStatus == 1 （当前线程是未持有锁调用await方法..最终会将node的状态修改为 取消状态..）
         //node.waitStatus == 0 为什么还要判断 node.prev == null?
         //因为signal方法 是先修改状态，再迁移。
