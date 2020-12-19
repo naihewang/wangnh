@@ -33,9 +33,14 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package java.util.concurrent.locks;
+package source_code.juc.AQS.ReentranLock;
+import source_code.juc.AQS.Condition.AbstractQueuedSynchronizer;
+
 import java.util.concurrent.TimeUnit;
 import java.util.Collection;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * A reentrant mutual exclusion {@link Lock} with the same basic
@@ -113,7 +118,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
      * into fair and nonfair versions below. Uses AQS state to
      * represent the number of holds on the lock.
      */
-    abstract static class Sync extends AbstractQueuedSynchronizer {
+    abstract static class Sync extends source_code.juc.AQS.Condition.AbstractQueuedSynchronizer {
         private static final long serialVersionUID = -5179523762034025860L;
 
         /**
@@ -225,7 +230,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         /**
          * 取消指定node参与竞争。
          */
-        private void cancelAcquire(Node node) {
+        private void cancelAcquire(java.util.concurrent.locks.AbstractQueuedSynchronizer.Node node) {
             //空判断..
             if (node == null)
                 return;
@@ -234,7 +239,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             node.thread = null;
 
             //获取当前取消排队node的前驱。
-            Node pred = node.prev;
+            java.util.concurrent.locks.AbstractQueuedSynchronizer.Node pred = node.prev;
 
             while (pred.waitStatus > 0)
                 node.prev = pred = pred.prev;
@@ -242,12 +247,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             //拿到前驱的后继节点。
             //1.当前node
             //2.可能也是 ws > 0 的节点。
-            Node predNext = pred.next;
+            java.util.concurrent.locks.AbstractQueuedSynchronizer.Node predNext = pred.next;
 
             //将当前node状态设置为 取消状态  1
-            node.waitStatus = Node.CANCELLED;
-
-
+            node.waitStatus = java.util.concurrent.locks.AbstractQueuedSynchronizer.Node.CANCELLED;
 
             /**
              * 当前取消排队的node所在 队列的位置不同，执行的出队策略是不一样的，一共分为三种情况：
@@ -255,13 +258,11 @@ public class ReentrantLock implements Lock, java.io.Serializable {
              * 2.当前node 不是 head.next 节点，也不是 tail
              * 3.当前node 是 head.next节点。
              */
-
-
             //条件一：node == tail  成立：当前node是队尾  tail -> node
             //条件二：compareAndSetTail(node, pred) 成功的话，说明修改tail完成。
             if (node == tail && compareAndSetTail(node, pred)) {
                 //修改pred.next -> null. 完成node出队。
-                compareAndSetNext(pred, predNext, null);
+                java.util.concurrent.locks.AbstractQueuedSynchronizer.compareAndSetNext(pred, predNext, null);
 
             } else {
 
@@ -278,16 +279,16 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 // 假设前驱状态是 <= 0 则设置前驱状态为 Signal状态..表示要唤醒后继节点。
                 //if里面做的事情，就是让pred.next -> node.next  ,所以需要保证pred节点状态为 Signal状态。
                 if (pred != head &&
-                        ((ws = pred.waitStatus) == Node.SIGNAL ||
-                                (ws <= 0 && compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) &&
+                        ((ws = pred.waitStatus) == java.util.concurrent.locks.AbstractQueuedSynchronizer.Node.SIGNAL ||
+                                (ws <= 0 && java.util.concurrent.locks.AbstractQueuedSynchronizer.compareAndSetWaitStatus(pred, ws, java.util.concurrent.locks.AbstractQueuedSynchronizer.Node.SIGNAL))) &&
                         pred.thread != null) {
                     //情况2：当前node 不是 head.next 节点，也不是 tail
                     //出队：pred.next -> node.next 节点后，当node.next节点 被唤醒后
                     //调用 shouldParkAfterFailedAcquire 会让node.next 节点越过取消状态的节点
                     //完成真正出队。
-                    Node next = node.next;
+                    java.util.concurrent.locks.AbstractQueuedSynchronizer.Node next = node.next;
                     if (next != null && next.waitStatus <= 0)
-                        compareAndSetNext(pred, predNext, next);
+                        java.util.concurrent.locks.AbstractQueuedSynchronizer.compareAndSetNext(pred, predNext, next);
 
                 } else {
                     //当前node 是 head.next节点。  更迷了...
@@ -317,7 +318,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                 //head什么情况下会被创建出来？
                 //当持锁线程未释放线程时，且持锁期间 有其它线程想要获取锁时，其它线程发现获取不了锁，而且队列是空队列，此时后续线程会为当前持锁中的
                 //线程 构建出来一个head节点，然后后续线程  会追加到 head 节点后面。
-                Node h = head;
+                java.util.concurrent.locks.AbstractQueuedSynchronizer.Node h = head;
 
                 //条件一:成立，说明队列中的head节点已经初始化过了，ReentrantLock 在使用期间 发生过 多线程竞争了...
                 //条件二：条件成立，说明当前head后面一定插入过node节点。
@@ -334,15 +335,15 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         /**
          * 唤醒当前节点的下一个节点。
          */
-        private void unparkSuccessor(Node node) {
+        private void unparkSuccessor(java.util.concurrent.locks.AbstractQueuedSynchronizer.Node node) {
             //获取当前节点的状态
             int ws = node.waitStatus;
 
             if (ws < 0)//-1 Signal  改成零的原因：因为当前节点已经完成喊后继节点的任务了..
-                compareAndSetWaitStatus(node, ws, 0);
+                java.util.concurrent.locks.AbstractQueuedSynchronizer.compareAndSetWaitStatus(node, ws, 0);
 
             //s是当前节点 的第一个后继节点。
-            Node s = node.next;
+            java.util.concurrent.locks.AbstractQueuedSynchronizer.Node s = node.next;
 
             //条件一：
             //s 什么时候等于null？
@@ -355,7 +356,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             if (s == null || s.waitStatus > 0) {
                 //查找可以被唤醒的节点...
                 s = null;
-                for (Node t = tail; t != null && t != node; t = t.prev)
+                for (java.util.concurrent.locks.AbstractQueuedSynchronizer.Node t = tail; t != null && t != node; t = t.prev)
                     if (t.waitStatus <= 0)
                         s = t;
 
@@ -400,9 +401,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             //       2.2：acquireQueued 挂起当前线程   唤醒后相关的逻辑..
             //      acquireQueued 返回true 表示挂起过程中线程被中断唤醒过..  false 表示未被中断过..
             if (!tryAcquire(arg) &&
-                    acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+                    acquireQueued(addWaiter(java.util.concurrent.locks.AbstractQueuedSynchronizer.Node.EXCLUSIVE), arg))
                 //再次设置中断标记位 true
-                selfInterrupt();
+                java.util.concurrent.locks.AbstractQueuedSynchronizer.selfInterrupt();
         }
 
         //acquireQueued 需要做什么呢？
@@ -411,7 +412,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         //AQS#acquireQueued
         //参数一：node 就是当前线程包装出来的node，且当前时刻 已经入队成功了..
         //参数二：当前线程抢占资源成功后，设置state值时 会用到。
-        final boolean acquireQueued(final Node node, int arg) {
+        final boolean acquireQueued(final java.util.concurrent.locks.AbstractQueuedSynchronizer.Node node, int arg) {
             //true 表示当前线程抢占锁成功，普通情况下【lock】 当前线程早晚会拿到锁..
             //false 表示失败，需要执行出队的逻辑... （回头讲 响应中断的lock方法时再讲。）
             boolean failed = true;
@@ -428,7 +429,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
 
                     //获取当前节点的前置节点..
-                    final Node p = node.predecessor();
+                    final java.util.concurrent.locks.AbstractQueuedSynchronizer.Node p = node.predecessor();
                     //条件一成立：p == head  说明当前节点为head.next节点，head.next节点在任何时候 都有权利去争夺锁.
                     //条件二：tryAcquire(arg)
                     //成立：说明head对应的线程 已经释放锁了，head.next节点对应的线程，正好获取到锁了..
@@ -476,13 +477,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * 参数二：node 当前线程对应node
          * 返回值：boolean  true 表示当前线程需要挂起..
          */
-        private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
+        private static boolean shouldParkAfterFailedAcquire(java.util.concurrent.locks.AbstractQueuedSynchronizer.Node pred, java.util.concurrent.locks.AbstractQueuedSynchronizer.Node node) {
             //获取前置节点的状态
             //waitStatus：0 默认状态 new Node() ； -1 Signal状态，表示当前节点释放锁之后会唤醒它的第一个后继节点； >0 表示当前节点是CANCELED状态
             int ws = pred.waitStatus;
             //条件成立：表示前置节点是个可以唤醒当前节点的节点，所以返回true ==> parkAndCheckInterrupt() park当前线程了..
             //普通情况下，第一次来到shouldPark。。。 ws 不会是 -1
-            if (ws == Node.SIGNAL)
+            if (ws == java.util.concurrent.locks.AbstractQueuedSynchronizer.Node.SIGNAL)
                 return true;
 
             //条件成立： >0 表示前置节点是CANCELED状态
@@ -498,7 +499,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             } else {
                 //当前node前置节点的状态就是 0 的这一种情况。
                 //将当前线程node的前置node，状态强制设置为 SIGNAl，表示前置节点释放锁之后需要 喊醒我..
-                compareAndSetWaitStatus(pred, ws, Node.SIGNAL);
+                java.util.concurrent.locks.AbstractQueuedSynchronizer.compareAndSetWaitStatus(pred, ws, java.util.concurrent.locks.AbstractQueuedSynchronizer.Node.SIGNAL);
             }
             return false;
         }
@@ -507,14 +508,14 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         //AQS#addWaiter
         //最终返回当前线程包装出来的node
-        private Node addWaiter(Node mode) {
+        private java.util.concurrent.locks.AbstractQueuedSynchronizer.Node addWaiter(java.util.concurrent.locks.AbstractQueuedSynchronizer.Node mode) {
             //Node.EXCLUSIVE
             //构建Node ，把当前线程封装到对象node中了
-            Node node = new Node(Thread.currentThread(), mode);
+            java.util.concurrent.locks.AbstractQueuedSynchronizer.Node node = new java.util.concurrent.locks.AbstractQueuedSynchronizer.Node(Thread.currentThread(), mode);
             // Try the fast path of enq; backup to full enq on failure
             //快速入队
             //获取队尾节点 保存到pred变量中
-            Node pred = tail;
+            java.util.concurrent.locks.AbstractQueuedSynchronizer.Node pred = tail;
             //条件成立：队列中已经有node了
             if (pred != null) {
                 //当前节点的prev 指向 pred
@@ -539,10 +540,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         //AQS#enq()
         //返回值：返回当前节点的 前置节点。
-        private Node enq(final Node node) {
+        private java.util.concurrent.locks.AbstractQueuedSynchronizer.Node enq(final java.util.concurrent.locks.AbstractQueuedSynchronizer.Node node) {
             //自旋入队，只有当前node入队成功后，才会跳出循环。
             for (;;) {
-                Node t = tail;
+                java.util.concurrent.locks.AbstractQueuedSynchronizer.Node t = tail;
                 //1.当前队列是空队列  tail == null
                 //说明当前 锁被占用，且当前线程 有可能是第一个获取锁失败的线程（当前时刻可能存在一批获取锁失败的线程...）
                 if (t == null) { // Must initialize
@@ -552,7 +553,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
                     //CAS成功，说明当前线程 成为head.next节点。
                     //线程需要为当前持锁的线程 创建head。
-                    if (compareAndSetHead(new Node()))
+                    if (compareAndSetHead(new java.util.concurrent.locks.AbstractQueuedSynchronizer.Node()))
                         tail = head;
 
                     //注意：这里没有return,会继续for。。
@@ -1064,9 +1065,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public boolean hasWaiters(Condition condition) {
         if (condition == null)
             throw new NullPointerException();
-        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
+        if (!(condition instanceof source_code.juc.AQS.Condition.AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
-        return sync.hasWaiters((AbstractQueuedSynchronizer.ConditionObject)condition);
+        return sync.hasWaiters((source_code.juc.AQS.Condition.AbstractQueuedSynchronizer.ConditionObject)condition);
     }
 
     /**
@@ -1087,9 +1088,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     public int getWaitQueueLength(Condition condition) {
         if (condition == null)
             throw new NullPointerException();
-        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
+        if (!(condition instanceof source_code.juc.AQS.Condition.AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
-        return sync.getWaitQueueLength((AbstractQueuedSynchronizer.ConditionObject)condition);
+        return sync.getWaitQueueLength((source_code.juc.AQS.Condition.AbstractQueuedSynchronizer.ConditionObject)condition);
     }
 
     /**
@@ -1112,7 +1113,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
     protected Collection<Thread> getWaitingThreads(Condition condition) {
         if (condition == null)
             throw new NullPointerException();
-        if (!(condition instanceof AbstractQueuedSynchronizer.ConditionObject))
+        if (!(condition instanceof source_code.juc.AQS.Condition.AbstractQueuedSynchronizer.ConditionObject))
             throw new IllegalArgumentException("not owner");
         return sync.getWaitingThreads((AbstractQueuedSynchronizer.ConditionObject)condition);
     }

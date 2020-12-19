@@ -1,9 +1,9 @@
-package source_code.juc.AQS;
+package source_code.juc.AQS.Condition;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import source_code.juc.AQS.ReentranLock.ReentrantLock;
 
 /**
  * ClassName: MiniArrayBrokingQueue

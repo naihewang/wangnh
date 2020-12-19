@@ -33,11 +33,13 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package java.util.concurrent.locks;
+package source_code.juc.AQS.Condition;
 import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.concurrent.locks.*;
+
 import sun.misc.Unsafe;
 
 /**
@@ -1838,7 +1840,7 @@ public abstract class AbstractQueuedSynchronizer
         //cas修改当前节点的状态，修改为0，因为当前节点马上要迁移到 阻塞队列了
         //成功：当前节点在条件队列中状态正常。
         //失败：1.取消状态 （线程await时 未持有锁，最终线程对应的node会设置为 取消状态）
-        //     2.node对应的线程 挂起期间，被其它线程使用 中断信号 唤醒过...（就会主队进入到 阻塞队列，这时也会修改状态为0）
+        //     2.node对应的线程 挂起期间，被其它线程使用 中断信号 唤醒过...（就会主动进入到 阻塞队列，这时也会修改状态为0）
         if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))
             return false;
 
