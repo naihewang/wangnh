@@ -41,9 +41,9 @@ import java.security.PrivilegedAction;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.AbstractQueuedSynchronizer;
+import source_code.juc.AQS.Condition.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
+import source_code.juc.AQS.ReentranLock.ReentrantLock;
 
 /**
  * An {@link ExecutorService} that executes each submitted task using
