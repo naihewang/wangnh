@@ -33,7 +33,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package source_code.juc.threadPoolExecutor;
+package JDK.juc.ThreadPoolExecutor;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
 

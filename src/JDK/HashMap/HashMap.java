@@ -23,7 +23,7 @@
  *
  */
 
-package source_code.juc.HashMap;
+package JDK.HashMap;
 
 import java.io.IOException;
 import java.io.InvalidObjectException;

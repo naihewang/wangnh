@@ -1,4 +1,4 @@
-package source_code.juc.cas;
+package JDK.CAS;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

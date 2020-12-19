@@ -33,7 +33,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package source_code.juc.ConcurrentHashMap;
+package JDK.juc.ConcurrentHashMap;
 
 import java.io.ObjectStreamField;
 import java.io.Serializable;
@@ -56,7 +56,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
-import java.util.concurrent.locks.ReentrantLock;
+import JDK.juc.AQS.ReentranLock.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;

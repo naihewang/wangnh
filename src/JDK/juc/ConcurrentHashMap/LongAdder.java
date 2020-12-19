@@ -33,7 +33,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package source_code.juc.ConcurrentHashMap;
+package JDK.juc.ConcurrentHashMap;
 import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicLong;
 

@@ -33,7 +33,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-package source_code.juc.ConcurrentHashMap;
+package JDK.juc.ConcurrentHashMap;
 import java.util.function.LongBinaryOperator;
 import java.util.function.DoubleBinaryOperator;
 import java.util.concurrent.ThreadLocalRandom;
